@@ -16,7 +16,7 @@ import random
 #############################################################
 TIMEOUT = 3
 DURATION = 0.5
-LENGTH = 3
+LENGTH = 6
 ritual_sequence = [3, 1, 0, 4, 2]
 rng_sequence = []
 button_sequence = []
@@ -31,7 +31,7 @@ ritual = False
 #                           SETUP                           #
 #############################################################
 ## SPEAKER SETUP
-for file in os.listdir("audio") :
+for file in sorted(os.listdir("audio")) :
     print(file)
     tmp_file = open(f"/audio/{file}", "rb")
     audio_files.append(WaveFile(tmp_file))
@@ -65,14 +65,16 @@ def light_led(index, audiofile):
 
 
 def play_sequence() :
+    print("play_sequence")
     for index in rng_sequence :
-        audio.play(audio_files[4])
+        audio.play(audio_files[0])
         for __ in range(2) :
             leds[index].value = not leds[index].value
             time.sleep(DURATION)
 
 
 def timeout_read() :
+    print("timeout_read")
     start_time = time.monotonic()
     while time.monotonic() - start_time < TIMEOUT :
         for index, button in enumerate(buttons) :
@@ -120,8 +122,8 @@ while ritual == False :
 
     play_sequence()
     if not read_sequence(rng_sequence) :
-        audio.play(audio_files[3])
-        time.sleep(3) 
+        audio.play(audio_files[4])
+        time.sleep(TIMEOUT) 
         print("Game Over")
         win = False
         
@@ -132,7 +134,7 @@ while ritual == False :
         
         if len(rng_sequence) >= LENGTH :
             audio.play(audio_files[1])
-            time.sleep(2)   
+            time.sleep(0.5)   
             blink_increment()
             print(rng_sequence)
             ritual = True
@@ -142,15 +144,15 @@ while True :
         if not button.value :
             if not index in button_state :
                 button_state.append(index)
-                light_led(index, audio_files[4])
+                light_led(index, audio_files[0])
                 print(index)
                 if len(button_state) == len(ritual_sequence) :
                     if not button_state == ritual_sequence :
                         button_state = []
-                        audio.play(audio_files[3])
+                        audio.play(audio_files[2])
                         print("Game Over")
                         time.sleep(5) 
                         
                     else :
                         print("Game finished")
-                        audio.play(audio_files[2])
+                        audio.play(audio_files[3])
