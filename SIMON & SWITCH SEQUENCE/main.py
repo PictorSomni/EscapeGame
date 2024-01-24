@@ -14,7 +14,7 @@ import random
 #############################################################
 #                         VARIABLES                         #
 #############################################################
-TIMEOUT = 3
+TIMEOUT = 5
 DURATION = 0.5
 LENGTH = 6
 ritual_sequence = [3, 1, 0, 4, 2]
@@ -24,8 +24,9 @@ leds = []
 buttons = []
 audio_files = []
 button_state = []
-win = True
+win = False
 ritual = False
+simon = True
 
 #############################################################
 #                           SETUP                           #
@@ -112,34 +113,9 @@ def blink_increment() :
 #############################################################
 #                         MAIN LOOP                         #
 #############################################################
-blink_increment()
 time.sleep(1)
 
 while ritual == False :
-
-    if win == True : # DOESN'T UPDATE WHEN PLAYER PUSHES THE WRONG BUTTON
-        generate_simon()
-
-    play_sequence()
-    if not read_sequence(rng_sequence) :
-        audio.play(audio_files[4])
-        time.sleep(TIMEOUT) 
-        print("Game Over")
-        win = False
-        
-
-    else :
-        win = True
-        print("+1")
-        
-        if len(rng_sequence) >= LENGTH :
-            audio.play(audio_files[1])
-            time.sleep(0.5)   
-            blink_increment()
-            print(rng_sequence)
-            ritual = True
-
-while True :
     for index, button in enumerate(buttons) :
         if not button.value :
             if not index in button_state :
@@ -156,3 +132,29 @@ while True :
                     else :
                         print("Game finished")
                         audio.play(audio_files[3])
+                        blink_increment()
+                        ritual = True
+                        time.sleep(2)
+
+while win == False :
+    if simon == True : # DOESN'T UPDATE WHEN PLAYER PUSHES THE WRONG BUTTON
+        generate_simon()
+
+    play_sequence()
+    if not read_sequence(rng_sequence) :
+        audio.play(audio_files[4])
+        time.sleep(TIMEOUT) 
+        print("Game Over")
+        simon = False
+        
+    else :
+        simon = True
+        print("+1")
+        
+        if len(rng_sequence) >= LENGTH :
+            audio.play(audio_files[1])
+            time.sleep(0.5)   
+            blink_increment()
+            print(rng_sequence)
+            win = True
+            
