@@ -79,9 +79,10 @@ def timeout_read() :
     start_time = time.monotonic()
     while time.monotonic() - start_time < TIMEOUT :
         for index, button in enumerate(buttons) :
-            if not button.value :
-                print(index)
-                return index
+            if index in range(5, 10) :
+                if not button.value :
+                    print(index)
+                    return index
 
 
 def read_sequence(seq) :
@@ -118,23 +119,24 @@ time.sleep(1)
 while ritual == False :
     for index, button in enumerate(buttons) :
         if not button.value :
-            if not index in button_state :
-                button_state.append(index)
-                light_led(index, audio_files[0])
-                print(index)
-                if len(button_state) == len(ritual_sequence) :
-                    if not button_state == ritual_sequence :
-                        button_state = []
-                        audio.play(audio_files[2])
-                        print("Game Over")
-                        time.sleep(5) 
-                        
-                    else :
-                        print("Game finished")
-                        audio.play(audio_files[3])
-                        blink_increment()
-                        ritual = True
-                        time.sleep(2)
+            if index in range(5) :
+                if not index in button_state :
+                    button_state.append(index)
+                    light_led(index, audio_files[0])
+                    print(index)
+                    if len(button_state) == len(ritual_sequence) :
+                        if not button_state == ritual_sequence :
+                            button_state = []
+                            audio.play(audio_files[2])
+                            print("Game Over")
+                            time.sleep(5) 
+                            
+                        else :
+                            print("Game finished")
+                            audio.play(audio_files[3])
+                            blink_increment()
+                            ritual = True
+                            time.sleep(2)
 
 while win == False :
     if simon == True : # DOESN'T UPDATE WHEN PLAYER PUSHES THE WRONG BUTTON
