@@ -66,7 +66,6 @@ def light_led(index, audiofile):
 
 
 def play_sequence() :
-    print("play_sequence")
     for index in rng_sequence :
         audio.play(audio_files[0])
         for __ in range(2) :
@@ -75,13 +74,11 @@ def play_sequence() :
 
 
 def timeout_read() :
-    print("timeout_read")
     start_time = time.monotonic()
     while time.monotonic() - start_time < TIMEOUT :
         for index, button in enumerate(buttons) :
             if index in range(5, 10) :
                 if not button.value :
-                    print(index)
                     return index
 
 
@@ -95,6 +92,14 @@ def read_sequence(seq) :
 
 def generate_simon() :
     rng = random.randrange(5, 10)
+
+    if len(rng_sequence) == 0 :
+        rng = random.randrange(5, 10)
+
+    else :    
+        while rng == rng_sequence[-1] :
+            rng = random.randrange(5, 10)
+
     rng_sequence.append(rng)
     
 
@@ -128,11 +133,9 @@ while ritual == False :
                         if not button_state == ritual_sequence :
                             button_state = []
                             audio.play(audio_files[2])
-                            print("Game Over")
                             time.sleep(5) 
                             
                         else :
-                            print("Game finished")
                             audio.play(audio_files[3])
                             blink_increment()
                             ritual = True
@@ -146,12 +149,10 @@ while win == False :
     if not read_sequence(rng_sequence) :
         audio.play(audio_files[4])
         time.sleep(TIMEOUT) 
-        print("Game Over")
         simon = False
         
     else :
         simon = True
-        print("+1")
         
         if len(rng_sequence) >= LENGTH :
             audio.play(audio_files[1])
