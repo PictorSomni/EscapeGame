@@ -5,8 +5,9 @@
 import time
 import board
 import os
-from adafruit_debouncer import Debouncer
 from digitalio import DigitalInOut, Direction, Pull
+from adafruit_ble import BLERadio
+from adafruit_ble.advertising.adafruit import AdafruitColor
 from audiopwmio import PWMAudioOut
 from audiocore import WaveFile
 import random
@@ -28,9 +29,15 @@ win = False
 ritual = False
 simon = True
 
+to_send = [0x000000, 0x000001]
+
 #############################################################
 #                           SETUP                           #
 #############################################################
+## BLE
+ble = BLERadio()
+advertisement = AdafruitColor()
+
 ## SPEAKER SETUP
 for file in sorted(os.listdir("audio")) :
     print(file)
@@ -103,7 +110,6 @@ def generate_simon() :
     rng_sequence.append(rng)
     
 
-
 def blink_increment() :
     for index in range(5, 10) :
         for _ in range(2) :
@@ -114,6 +120,12 @@ def blink_increment() :
         for _ in range(2) :
             leds[index].value = not leds[index].value
             time.sleep(0.1)
+
+
+def send(broadcast_color):
+    advertisement.color = broadcast_color
+    ble.start_advertising(advertisement)
+    time.sleep(1)
 
 
 #############################################################
@@ -160,4 +172,6 @@ while win == False :
             blink_increment()
             print(rng_sequence)
             win = True
+send(to_send[1])
+
             
