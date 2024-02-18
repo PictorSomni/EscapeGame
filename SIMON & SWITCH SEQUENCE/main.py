@@ -5,8 +5,9 @@
 import time
 import board
 import os
-from adafruit_debouncer import Debouncer
 from digitalio import DigitalInOut, Direction, Pull
+from adafruit_ble import BLERadio
+from adafruit_ble.advertising.adafruit import AdafruitColor
 from audiopwmio import PWMAudioOut
 from audiocore import WaveFile
 import random
@@ -14,7 +15,7 @@ import random
 #############################################################
 #                         VARIABLES                         #
 #############################################################
-TIMEOUT = 3
+TIMEOUT = 5
 DURATION = 0.5
 LENGTH = 6
 ritual_sequence = [3, 1, 0, 4, 2]
@@ -24,12 +25,19 @@ leds = []
 buttons = []
 audio_files = []
 button_state = []
-win = True
+win = False
 ritual = False
+simon = True
+
+to_send = [0x000000, 0x000001]
 
 #############################################################
 #                           SETUP                           #
 #############################################################
+## BLE
+ble = BLERadio()
+advertisement = AdafruitColor()
+
 ## SPEAKER SETUP
 for file in sorted(os.listdir("audio")) :
     print(file)
@@ -65,7 +73,6 @@ def light_led(index, audiofile):
 
 
 def play_sequence() :
-    print("play_sequence")
     for index in rng_sequence :
         audio.play(audio_files[0])
         for __ in range(2) :
@@ -74,13 +81,12 @@ def play_sequence() :
 
 
 def timeout_read() :
-    print("timeout_read")
     start_time = time.monotonic()
     while time.monotonic() - start_time < TIMEOUT :
         for index, button in enumerate(buttons) :
-            if not button.value :
-                print(index)
-                return index
+            if index in range(5, 10) :
+                if not button.value :
+                    return index
 
 
 def read_sequence(seq) :
@@ -93,9 +99,16 @@ def read_sequence(seq) :
 
 def generate_simon() :
     rng = random.randrange(5, 10)
+
+    if len(rng_sequence) == 0 :
+        rng = random.randrange(5, 10)
+
+    else :    
+        while rng == rng_sequence[-1] :
+            rng = random.randrange(5, 10)
+
     rng_sequence.append(rng)
     
-
 
 def blink_increment() :
     for index in range(5, 10) :
@@ -109,50 +122,57 @@ def blink_increment() :
             time.sleep(0.1)
 
 
+def send(broadcast_color):
+    advertisement.color = broadcast_color
+    ble.start_advertising(advertisement)
+    time.sleep(1)
+    ble.stop_advertising()
+
+
 #############################################################
 #                         MAIN LOOP                         #
 #############################################################
-blink_increment()
 time.sleep(1)
 
 while ritual == False :
+    for index, button in enumerate(buttons) :
+        if not button.value :
+            if index in range(5) :
+                if not index in button_state :
+                    button_state.append(index)
+                    light_led(index, audio_files[0])
+                    print(index)
+                    if len(button_state) == len(ritual_sequence) :
+                        if not button_state == ritual_sequence :
+                            button_state = []
+                            audio.play(audio_files[2])
+                            time.sleep(5) 
+                            
+                        else :
+                            audio.play(audio_files[3])
+                            blink_increment()
+                            ritual = True
+                            time.sleep(2)
 
-    if win == True : # DOESN'T UPDATE WHEN PLAYER PUSHES THE WRONG BUTTON
+while win == False :
+    if simon == True : # DOESN'T UPDATE WHEN PLAYER PUSHES THE WRONG BUTTON
         generate_simon()
 
     play_sequence()
     if not read_sequence(rng_sequence) :
         audio.play(audio_files[4])
         time.sleep(TIMEOUT) 
-        print("Game Over")
-        win = False
+        simon = False
         
-
     else :
-        win = True
-        print("+1")
+        simon = True
         
         if len(rng_sequence) >= LENGTH :
             audio.play(audio_files[1])
             time.sleep(0.5)   
             blink_increment()
             print(rng_sequence)
-            ritual = True
+            win = True
+send(to_send[1])
 
-while True :
-    for index, button in enumerate(buttons) :
-        if not button.value :
-            if not index in button_state :
-                button_state.append(index)
-                light_led(index, audio_files[0])
-                print(index)
-                if len(button_state) == len(ritual_sequence) :
-                    if not button_state == ritual_sequence :
-                        button_state = []
-                        audio.play(audio_files[2])
-                        print("Game Over")
-                        time.sleep(5) 
-                        
-                    else :
-                        print("Game finished")
-                        audio.play(audio_files[3])
+            
