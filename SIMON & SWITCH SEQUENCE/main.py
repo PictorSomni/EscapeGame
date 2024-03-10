@@ -18,7 +18,7 @@ import random
 TIMEOUT = 5
 DURATION = 0.5
 LENGTH = 6
-ritual_sequence = [3, 1, 0, 4, 2]
+ritual_sequence = [0, 1, 3, 4, 2]
 rng_sequence = []
 button_sequence = []
 leds = []
@@ -126,6 +126,7 @@ def send(broadcast_color):
     advertisement.color = broadcast_color
     ble.start_advertising(advertisement)
     time.sleep(1)
+    ble.stop_advertising()
 
 
 #############################################################
