@@ -28,12 +28,13 @@ ELIXIR = 0x9F272F
 AIR = 0xB0BCBF
 
 # --------------- Captions --------------- #
-CAPTIONS = [["Feu", FIRE, 156, 156],
-            ["Terre", EARTH, 0, 130],
-            ["Eau", WATER, 327, 156],
+CAPTIONS = [["Eau", WATER, 9, 156],
+            ["Terre", EARTH, 292, 104],
+            ["Feu", FIRE, 169, 156],
             ["Elixir", ELIXIR, 165, 52],
             ["Air", AIR, 184, 52],
             ]
+
 
 cwd = ("/"+__file__).rsplit('/', 1)[0] # the current working directory (where this file is)
 
@@ -139,7 +140,10 @@ while True:
                 mixer.voice[0].level = min(max(mixer.voice[0].level - 0.01, 0), 1)
                 sleep(0.2)
             mixer.voice[0].stop()
-            audio.deinit() 
+            audio.deinit()
+            text_box("")
+            display.brightness = 0.0
+            
 
         # don't repeat until a new touch begins
         while ts.touch_point:
