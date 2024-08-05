@@ -48,6 +48,7 @@ while True:
             cpb.pixels.brightness += POWER
         else :
             print("BROADCASTING")
+            cpb.play_file("goat.wav")
             send(TO_SEND)
     else:
         cpb.pixels.brightness -= POWER
