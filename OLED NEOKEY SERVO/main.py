@@ -38,7 +38,7 @@ def back_to_default (text):
 ## CLEARS
 displayio.release_displays()
 
-## SETUP BUTTON PINS
+# ---------------- Buttons ---------------- #
 button_b = digitalio.DigitalInOut(board.D6)
 button_b.direction = digitalio.Direction.INPUT
 button_b.pull = digitalio.Pull.UP
@@ -53,17 +53,17 @@ buttons_state = False
 
 hall = analogio.AnalogIn(board.A0)
 
-## NEOPIXELS
+# ---------------- Neopixels ---------------- #
 pixels = neopixel.NeoPixel(board.D9, 2, brightness=0.1)
 pixels.fill((0, 0, 0))
 
 uart = busio.UART(board.TX, board.RX, baudrate=9600)
 
-## I2C
+# ---------------- I2C ---------------- #
 i2c = board.I2C()
 display_bus = displayio.I2CDisplay(i2c, device_address=0x3C)
 
-## SH1107 OLED DISPLAY
+# ---------------- SH 1107 display ---------------- #
 WIDTH = 128
 HEIGHT = 64
 
@@ -81,8 +81,7 @@ text_area = label.Label(terminalio.FONT)
 back_to_default(DEFAULT_TEXT)
 group.append(text_area)
 
-
-## VL53 TIME OF FLIGHT
+# ---------------- VL53 Time of flight ---------------- #
 vl53 = adafruit_vl53l4cd.VL53L4CD(i2c)
 
 # OPTIONAL: can set non-default values
@@ -100,7 +99,7 @@ print("--------------------")
 
 vl53.start_ranging()
 
-## A BIT OF WAIT
+# ---------------- A bit of wait... ---------------- #
 time.sleep(0.5)
 
 #############################################################
@@ -116,12 +115,13 @@ while True :
     
     pixels.fill(rainbowio.colorwheel(int(time.monotonic() * 13) & 255))  
 
-    ## HALL SENSOR
+    # ---------------- Hall sensor ---------------- #
     if hall.value < 30000 :
         text_area.x = 7
         text_area.text = "MAGNET ! "
         # print(f"HALL SENSOR : {hall.value}")
 
+    # ---------------- Buttons ---------------- #
     ## BOTH BUTTONS PRESSED
     if not button_b.value and not button_c.value :
         buttons_state = True
@@ -195,7 +195,7 @@ while True :
         back_to_default(f"{vl53.distance} cm")
         button_b_state = False
         counter = 0
-
-    ## A little pause so both buttons presses (for delete) is read a lot better
+        
+    # ---------------- A bit of wait to better read button presses ---------------- #
     time.sleep(0.2)
     display.root_group = group
