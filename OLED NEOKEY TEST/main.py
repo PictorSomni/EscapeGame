@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+                                                                                     # -*- coding: utf-8 -*-
 #############################################################
 #                          IMPORTS                          #
 #############################################################
@@ -9,6 +9,7 @@ import displayio
 import terminalio
 import digitalio
 import analogio
+import rotaryio
 import neopixel
 import rainbowio
 from adafruit_display_text import label
@@ -50,6 +51,7 @@ button_c.pull = digitalio.Pull.UP
 button_b_state = False
 button_c_state = False
 buttons_state = False
+sensor = True
 
 hall = analogio.AnalogIn(board.A0)
 
@@ -63,7 +65,7 @@ uart = busio.UART(board.TX, board.RX, baudrate=9600)
 i2c = board.I2C()
 display_bus = displayio.I2CDisplay(i2c, device_address=0x3C)
 
-# ---------------- SH 1107 display ---------------- #
+# ---------------- SH1107 OLED display ---------------- #
 WIDTH = 128
 HEIGHT = 64
 
@@ -80,6 +82,10 @@ color_palette[0] = 0xFFFFFF  # White
 text_area = label.Label(terminalio.FONT)
 back_to_default(DEFAULT_TEXT)
 group.append(text_area)
+
+# ---------------- Encoder ---------------- #
+encoder = rotaryio.IncrementalEncoder(board.MISO, board.D4)
+last_position = 0
 
 # ---------------- VL53 Time of flight ---------------- #
 vl53 = adafruit_vl53l4cd.VL53L4CD(i2c)
@@ -99,7 +105,7 @@ print("--------------------")
 
 vl53.start_ranging()
 
-# ---------------- A bit of wait... ---------------- #
+# ---------------- A bit of wait ---------------- #
 time.sleep(0.5)
 
 #############################################################
@@ -111,17 +117,23 @@ while True :
         pass
     vl53.clear_interrupt()
 
-    back_to_default(f"{vl53.distance} cm")
+    if sensor == True :
+        back_to_default(f"{vl53.distance} cm")
+    else:
+        back_to_default(f"Turn {position}")
     
     pixels.fill(rainbowio.colorwheel(int(time.monotonic() * 13) & 255))  
 
-    # ---------------- Hall sensor ---------------- #
+    ## ENCODER POSITION
+    position = encoder.position
+    # if position != last_position:
+    #     text_area.text = f"Turn: {position}"
+
+    ## HALL SENSOR
     if hall.value < 30000 :
         text_area.x = 7
         text_area.text = "MAGNET ! "
-        # print(f"HALL SENSOR : {hall.value}")
 
-    # ---------------- Buttons ---------------- #
     ## BOTH BUTTONS PRESSED
     if not button_b.value and not button_c.value :
         buttons_state = True
@@ -135,7 +147,6 @@ while True :
     if button_b.value and button_c.value and buttons_state : 
         buttons_state = False
         print("LES 2")
-        back_to_default(f"{vl53.distance} cm")
 
 
 ################################################
@@ -145,26 +156,12 @@ while True :
     if not button_c.value and not button_c_state: 
         pixels.fill((255, 0, 255))
         button_c_state = True
-        text_area.x = 32
-        text_area.text = "GAUCHE"
-        while not button_c.value :
-            if not button_b.value  :
-                if counter < MAX :
-                    counter += 1
-                    text_area.x = 9
-                    text_area.text = f"{sequence_gauche[counter]}"
-                    time.sleep(0.2)
-
 
     ## LEFT BUTTON RELEASED
     if button_c.value and button_c_state:
-        if counter > 0 :
-            print(f"{sequence_gauche[counter]}")
-
         time.sleep(0.2)
-        back_to_default(f"{vl53.distance} cm")
+        sensor = True
         button_c_state = False
-        counter = 0
 
 
 ################################################
@@ -174,28 +171,12 @@ while True :
     if not button_b.value and not button_b_state: 
         pixels.fill((0, 85, 255))
         button_b_state = True
-        text_area.x = 32
-        text_area.text = "DROITE"
-        while not button_b.value :
-
-            if not button_c.value  :
-                if counter < MAX :
-                    counter += 1
-                    text_area.x = 9
-                    text_area.text = f"{sequence_droite[counter]}"
-                    time.sleep(0.2)
-
 
     ## RIGHT BUTTON RELEASED
     if button_b.value and button_b_state:
-        if counter > 0 :
-            print(f"{sequence_droite[counter]}")
-
         time.sleep(0.2)
-        back_to_default(f"{vl53.distance} cm")
+        sensor = False
         button_b_state = False
-        counter = 0
-        
-    # ---------------- A bit of wait to better read button presses ---------------- #
-    time.sleep(0.2)
+
+    last_position = position
     display.root_group = group
