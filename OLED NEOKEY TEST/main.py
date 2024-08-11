@@ -1,10 +1,9 @@
-                                                                                     # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 #############################################################
 #                          IMPORTS                          #
 #############################################################
 import time
 import board
-import busio
 import displayio
 import terminalio
 import digitalio
@@ -53,22 +52,20 @@ button_c_state = False
 buttons_state = False
 sensor = True
 
+# ---------------- Hall sensor ---------------- #
 hall = analogio.AnalogIn(board.A0)
 
 # ---------------- Neopixels ---------------- #
 pixels = neopixel.NeoPixel(board.D9, 2, brightness=0.1)
 pixels.fill((0, 0, 0))
 
-uart = busio.UART(board.TX, board.RX, baudrate=9600)
-
 # ---------------- I2C ---------------- #
 i2c = board.I2C()
-display_bus = displayio.I2CDisplay(i2c, device_address=0x3C)
 
 # ---------------- SH1107 OLED display ---------------- #
 WIDTH = 128
 HEIGHT = 64
-
+display_bus = displayio.I2CDisplay(i2c, device_address=0x3C)
 display = adafruit_displayio_sh1107.SH1107(display_bus, width=WIDTH, height=HEIGHT)
 
 group = displayio.Group()
@@ -77,7 +74,6 @@ display.root_group = group
 color_bitmap = displayio.Bitmap(WIDTH, HEIGHT, 1)
 color_palette = displayio.Palette(1)
 color_palette[0] = 0xFFFFFF  # White
-
 
 text_area = label.Label(terminalio.FONT)
 back_to_default(DEFAULT_TEXT)
@@ -142,15 +138,12 @@ while True :
             text_area.x = 7
             text_area.text = "-< H@CK >-"
 
-
     ## BOTH BUTTONS RELEASED
     if button_b.value and button_c.value and buttons_state : 
         buttons_state = False
         print("LES 2")
 
-
 ################################################
-
 
     ## LEFT BUTTON PRESSED AND MAINTAINED
     if not button_c.value and not button_c_state: 
@@ -163,9 +156,7 @@ while True :
         sensor = True
         button_c_state = False
 
-
 ################################################
-
 
     ## RIGHT BUTTON PRESSED AND MAINTAINED
     if not button_b.value and not button_b_state: 
@@ -178,5 +169,5 @@ while True :
         sensor = False
         button_b_state = False
 
-    last_position = position
+    # last_position = position
     display.root_group = group
